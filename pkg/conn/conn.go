@@ -16,9 +16,6 @@ const (
 type Conn struct {
 	w  io.Writer
 	br *bufio.Reader
-
-	// reuse interleaved frames. they should never be passed to secondary routines
-	fr base.InterleavedFrame
 }
 
 // NewConn allocates a Conn.
@@ -63,8 +60,9 @@ func (c *Conn) ReadResponse() (*base.Response, error) {
 
 // ReadInterleavedFrame reads a InterleavedFrame.
 func (c *Conn) ReadInterleavedFrame() (*base.InterleavedFrame, error) {
-	err := c.fr.Unmarshal(c.br)
-	return &c.fr, err
+	var fr base.InterleavedFrame
+	err := fr.Unmarshal(c.br)
+	return &fr, err
 }
 
 // WriteRequest writes a request.
