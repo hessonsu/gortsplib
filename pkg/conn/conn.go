@@ -16,6 +16,7 @@ const (
 type Conn struct {
 	w  io.Writer
 	br *bufio.Reader
+	fr base.InterleavedFrame
 }
 
 // NewConn allocates a Conn.
@@ -60,9 +61,8 @@ func (c *Conn) ReadResponse() (*base.Response, error) {
 
 // ReadInterleavedFrame reads a InterleavedFrame.
 func (c *Conn) ReadInterleavedFrame() (*base.InterleavedFrame, error) {
-	var fr base.InterleavedFrame
-	err := fr.Unmarshal(c.br)
-	return &fr, err
+	err := c.fr.Unmarshal(c.br)
+	return &c.fr, err
 }
 
 // WriteRequest writes a request.
