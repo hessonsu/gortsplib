@@ -2,6 +2,7 @@ package base
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 )
@@ -18,11 +19,14 @@ type InterleavedFrame struct {
 	Channel int
 
 	// payload
-	Payload []byte
+	//Payload []byte
+	bytes.Buffer
+	PayLoadLength int
 }
 
 // Unmarshal decodes an interleaved frame.
 func (f *InterleavedFrame) Unmarshal(br *bufio.Reader) error {
+	f.Reset()
 	var header [4]byte
 	_, err := io.ReadFull(br, header[:])
 	if err != nil {
@@ -35,17 +39,17 @@ func (f *InterleavedFrame) Unmarshal(br *bufio.Reader) error {
 
 	// it's useless to check payloadLen since it's limited to 65535
 	payloadLen := int(uint16(header[2])<<8 | uint16(header[3]))
-
+	f.PayLoadLength = payloadLen
 	f.Channel = int(header[1])
-	f.Payload = make([]byte, payloadLen)
+	//f.Payload = make([]byte, payloadLen)
 
-	_, err = io.ReadFull(br, f.Payload)
+	_, err = io.CopyN(f, br, int64(payloadLen))
 	return err
 }
 
 // MarshalSize returns the size of an InterleavedFrame.
 func (f InterleavedFrame) MarshalSize() int {
-	return 4 + len(f.Payload)
+	return 4 + f.PayLoadLength
 }
 
 // MarshalTo writes an InterleavedFrame.
@@ -54,12 +58,12 @@ func (f InterleavedFrame) MarshalTo(buf []byte) (int, error) {
 
 	pos += copy(buf[pos:], []byte{0x24, byte(f.Channel)})
 
-	payloadLen := len(f.Payload)
+	payloadLen := f.PayLoadLength
 	buf[pos] = byte(payloadLen >> 8)
 	buf[pos+1] = byte(payloadLen)
 	pos += 2
 
-	pos += copy(buf[pos:], f.Payload)
+	pos += copy(buf[pos:], f.Bytes())
 
 	return pos, nil
 }
@@ -69,4 +73,10 @@ func (f InterleavedFrame) Marshal() ([]byte, error) {
 	buf := make([]byte, f.MarshalSize())
 	_, err := f.MarshalTo(buf)
 	return buf, err
+}
+
+func (f *InterleavedFrame) WritePayload(payload []byte) {
+	f.PayLoadLength = len(payload)
+	f.Reset()
+	f.Write(payload)
 }

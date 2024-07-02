@@ -164,14 +164,15 @@ func (cm *clientMedia) writePacketRTCPInQueueUDP(payload []byte) {
 
 func (cm *clientMedia) writePacketRTPInQueueTCP(payload []byte) {
 	atomic.AddUint64(cm.c.BytesSent, uint64(len(payload)))
-	cm.tcpRTPFrame.Payload = payload
+
+	cm.tcpRTPFrame.WritePayload(payload)
 	cm.c.nconn.SetWriteDeadline(time.Now().Add(cm.c.WriteTimeout))
 	cm.c.conn.WriteInterleavedFrame(cm.tcpRTPFrame, cm.tcpBuffer) //nolint:errcheck
 }
 
 func (cm *clientMedia) writePacketRTCPInQueueTCP(payload []byte) {
 	atomic.AddUint64(cm.c.BytesSent, uint64(len(payload)))
-	cm.tcpRTCPFrame.Payload = payload
+	cm.tcpRTCPFrame.WritePayload(payload)
 	cm.c.nconn.SetWriteDeadline(time.Now().Add(cm.c.WriteTimeout))
 	cm.c.conn.WriteInterleavedFrame(cm.tcpRTCPFrame, cm.tcpBuffer) //nolint:errcheck
 }

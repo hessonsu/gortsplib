@@ -64,7 +64,7 @@ func (r *clientReader) runInner() error {
 			}
 
 			if cb, ok := r.c.tcpCallbackByChannel[what.Channel]; ok {
-				cb(what.Payload)
+				cb(what.Bytes())
 			}
 			r.mutex.Unlock()
 		}

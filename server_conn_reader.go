@@ -117,10 +117,10 @@ func (cr *serverConnReader) readFuncTCP() error {
 			return liberrors.ErrServerUnexpectedResponse{}
 
 		case *base.InterleavedFrame:
-			atomic.AddUint64(cr.sc.session.bytesReceived, uint64(len(what.Payload)))
+			atomic.AddUint64(cr.sc.session.bytesReceived, uint64(what.PayLoadLength))
 
 			if cb, ok := cr.sc.session.tcpCallbackByChannel[what.Channel]; ok {
-				cb(what.Payload)
+				cb(what.Bytes())
 			}
 		}
 	}

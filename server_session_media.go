@@ -127,14 +127,14 @@ func (sm *serverSessionMedia) writePacketRTCPInQueueUDP(payload []byte) {
 
 func (sm *serverSessionMedia) writePacketRTPInQueueTCP(payload []byte) {
 	atomic.AddUint64(sm.ss.bytesSent, uint64(len(payload)))
-	sm.tcpRTPFrame.Payload = payload
+	sm.tcpRTPFrame.WritePayload(payload)
 	sm.ss.tcpConn.nconn.SetWriteDeadline(time.Now().Add(sm.ss.s.WriteTimeout))
 	sm.ss.tcpConn.conn.WriteInterleavedFrame(sm.tcpRTPFrame, sm.tcpBuffer) //nolint:errcheck
 }
 
 func (sm *serverSessionMedia) writePacketRTCPInQueueTCP(payload []byte) {
 	atomic.AddUint64(sm.ss.bytesSent, uint64(len(payload)))
-	sm.tcpRTCPFrame.Payload = payload
+	sm.tcpRTCPFrame.WritePayload(payload)
 	sm.ss.tcpConn.nconn.SetWriteDeadline(time.Now().Add(sm.ss.s.WriteTimeout))
 	sm.ss.tcpConn.conn.WriteInterleavedFrame(sm.tcpRTCPFrame, sm.tcpBuffer) //nolint:errcheck
 }
